@@ -1,0 +1,40 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+ 	id="org.apache.cordova.device" version="0.2.3">
+ 	<name>LifesenseBLEPlugin</name>
+ 	<description>Leo Tech Plugin</description>
+ 	<license>Apache 2.0</license>
+ 	<keywords>lifesense,ble</keywords>
+ 	
+ 	<engines>
+ 		<engine name="cordova" version=">=3.1.0" />
+ 	</engines>
+
+ 	<js-module src="www/lifesense-ble-plugin.js" name="lifesenseBLEPlugin">
+ 		<clobbers target="lifesenseBLEPlugin" />
+ 	</js-module>
+
+ 	<platform name="android">
+ 		<config-file target="config.xml" parent="/*">
+ 			<feature name="LifesenseBLEPlugin">
+ 				<param name="android-package" value="com.leotech.plugin.LifesenseBLEPlugin"/>
+ 			</feature>
+ 		</config-file>
+ 		<config-file target="AndroidManifest.xml" parent="/manifest">
+ 			<uses-permission android:name="android.permission.BLUETOOTH"/>
+ 			<uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+ 			<uses-sdk android:minSdkVersion="18" android:targetSdkVersion="19" />            
+ 		</config-file>
+
+ 		<source-file src="src/android/LifesenseBLEPlugin.java"
+ 			target-dir="src/com/leotech/plugin"/>
+ 			<source-file src="src/android/BleDevice.java"
+ 				target-dir="src/com/leotech/plugin"/>     
+ 				<source-file src="src/android/TypeConversion.java"
+ 					target-dir="src/com/leotech/plugin"/>  
+ 					<source-file src="src/android/gson-2.2.4.jar"
+ 						target-dir="libs" framework="true"/>     
+ 						<source-file src="src/android/lifesense-ble-1.2.2.jar"
+ 							target-dir="libs" framework="true"/> 
+ 						</platform>
+ 					</plugin>
