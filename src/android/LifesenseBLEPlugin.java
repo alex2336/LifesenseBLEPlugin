@@ -40,7 +40,7 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 	String PAIR_DEVICE = "pairDevice";
 	String GET_PARIED_DEVICE = "getPairedDevice";
 	String ASK_FOR_DATA = "askForData";
-	String ASK_FOR_DATA_BY_DEVICE_ID = "askForDataByDeviceId";
+	String ASK_FOR_DATA_BY_DEVICE_MAC_ADDRESS = "askForDataByDeviceMacAddress";
 	String GET_DATA = "getData";
 	String CLEAR_DEVICE_LIST = "clearDeviceList";
 	@Override
@@ -65,8 +65,8 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 		}else if(action.equals(ASK_FOR_DATA)){
 			askForData(callbackContext);
 			return true;
-		}else if(action.equals(ASK_FOR_DATA_BY_DEVICE_ID)){
-			askForDataByDeviceId(args.getString(0),callbackContext);
+		}else if(action.equals(ASK_FOR_DATA_BY_DEVICE_MAC_ADDRESS)){
+			askForDataByDeviceMacAddress(args.getString(0),callbackContext);
 			return true;
 		}else if(action.equals(GET_DATA)){
 			getData(callbackContext);
@@ -98,18 +98,18 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 			Log.d(tag,"OTHER TASKS ARE RUNNING!!");
 		}
 	}
-	private void askForDataByDeviceId(String jsonString, CallbackContext callbackContext){
-		String name;
+	private void askForDataByDeviceMacAddress(String jsonString, CallbackContext callbackContext){
+		String address;
 		try{
 			JSONObject deviceNameJson = new JSONObject(jsonString);
-			name = (String)deviceNameJson.get("name");
+			address = (String)deviceNameJson.get("address");
 		}catch(Exception e){
 			e.printStackTrace();
 			callbackContext.error("invalid parameter.");
 			return;
 		}
 		String defaultValue = "not found!";
-		String savedDeviceJson = sharedPref.getString(name,defaultValue);
+		String savedDeviceJson = sharedPref.getString(address,defaultValue);
 		if(savedDeviceJson==defaultValue){
 			callbackContext.error("This device haven't been paired before");
 		}else{
@@ -193,7 +193,7 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 					{
 						pairedDevice = device;
 						SharedPreferences.Editor editor = sharedPref.edit();
-						editor.putString(device.getDeviceName(), gson.toJson(device));
+						editor.putString(device.getDeviceAddress(), gson.toJson(device));
 						editor.commit();
 						Log.d(tag,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Device paired:"+device.getDeviceName());
 					}
