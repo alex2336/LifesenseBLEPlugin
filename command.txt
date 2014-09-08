@@ -1,1 +1,1 @@
-cordova plugin add https://github.com/alex2336/BluetoothDevicePlugin.git
+cordova plugin add https://github.com/alex2336/LifesenseBLEPlugin.git
