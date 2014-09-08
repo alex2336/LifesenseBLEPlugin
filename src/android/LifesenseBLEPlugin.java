@@ -40,7 +40,7 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 	String PAIR_DEVICE = "pairDevice";
 	String GET_PARIED_DEVICE = "getPairedDevice";
 	String ASK_FOR_DATA = "askForData";
-	String ASK_FOR_DATA_WITH_DEVICE_NAME = "askForDataWithDeviceName";
+	String ASK_FOR_DATA_BY_DEVICE_ID = "askForDataByDeviceId";
 	String GET_DATA = "getData";
 	String CLEAR_DEVICE_LIST = "clearDeviceList";
 	@Override
@@ -65,8 +65,8 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 		}else if(action.equals(ASK_FOR_DATA)){
 			askForData(callbackContext);
 			return true;
-		}else if(action.equals(ASK_FOR_DATA_WITH_DEVICE_NAME)){
-			askForDataByDeviceName(args.getString(0),callbackContext);
+		}else if(action.equals(ASK_FOR_DATA_BY_DEVICE_ID)){
+			askForDataByDeviceId(args.getString(0),callbackContext);
 			return true;
 		}else if(action.equals(GET_DATA)){
 			getData(callbackContext);
@@ -98,7 +98,7 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 			Log.d(tag,"OTHER TASKS ARE RUNNING!!");
 		}
 	}
-	private void askForDataByDeviceName(String jsonString, CallbackContext callbackContext){
+	private void askForDataByDeviceId(String jsonString, CallbackContext callbackContext){
 		String name;
 		try{
 			JSONObject deviceNameJson = new JSONObject(jsonString);
