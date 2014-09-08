@@ -54,13 +54,13 @@ var lifesenseBLEPlugin = {
             [{}]
         ); 
      },
-     askForDataByDeviceId:function(successCallback, errorCallback, name) {
+     askForDataByDeviceMacAddress:function(successCallback, errorCallback, address) {
         cordova.exec(
             successCallback, 
             errorCallback, 
             'LifesenseBLEPlugin', 
-            'askForDataByDeviceId',
-            [{name:name}]
+            'askForDataByDeviceMacAddress',
+            [{address:address}]
         ); 
      },
      getData:function(successCallback, errorCallback) {
