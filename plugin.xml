@@ -11,7 +11,7 @@
  	</engines>
 
  	<js-module src="www/lifesense-ble-plugin.js" name="lifesenseBLEPlugin">
- 		<clobbers target="lifesenseBLEPlugin" />
+ 		<clobbers target="cordova.plugins.lifesenseBLEPlugin" />
  	</js-module>
 
  	<platform name="android">
