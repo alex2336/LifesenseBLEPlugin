@@ -37,4 +37,16 @@
  						<source-file src="src/android/lifesense-ble-1.2.2.jar"
  							target-dir="libs" framework="true"/> 
  						</platform>
+ 						<platform name="ios">
+ 							<config-file target="config.xml" parent="/*">
+ 								<feature name="LifesenseBLEPlugin">
+ 									<param name="ios-package" value="LifesenseBLEPlugin" />
+ 								</feature>
+ 							</config-file>
+
+ 							<header-file src="src/ios/LifesenseBLEPlugin.h" />
+ 							<source-file src="src/ios/LifesenseBLEPlugin.m" />
+ 							<framework src="CoreBluetooth.framework" />
+ 							<framework src="src/ios/LSBLE__A2.framework" custom="true"/>
+ 						</platform>
  					</plugin>

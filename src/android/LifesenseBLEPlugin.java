@@ -22,21 +22,67 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 import java.lang.Integer;
 public class LifesenseBLEPlugin extends CordovaPlugin {
-	private DeviceManagerCallback mDelegate;    
-	private LSDeviceInfo mDevice;
+    /**
+     * Device manager callback instance
+     */
+	private DeviceManagerCallback mDelegate;
+
+    /**
+     * Device being paired.
+     */
 	private LSDeviceInfo pairedDevice;
-	private ArrayList<BleDevice> tempList=new ArrayList<BleDevice>();
-	private ArrayList<BleDevice> deviceList=new ArrayList<BleDevice>();
+
+    /**
+     * List of devices discovered. Populated on scan.
+     */
+	private ArrayList<BleDevice> scannedDeviceList = new ArrayList<BleDevice>();
+
+    /**
+     * List of data retrieved from the Bluetooth device. Populated on askForDataByDeviceMacAddress
+     */
+	private ArrayList<PedometerData> dataList = new ArrayList<PedometerData>();
+
+    /**
+     * Bluetooth device manager instance
+     */
 	private BleDeviceManager bleDeviceManager;
-	private TypeConversion typeConversion;
-	private Gson gson;
-	private ArrayList<PedometerData> data;
-	private long lastUpdateTime;
+
+    /**
+     * Flag indicating whether task should be interrupted or not. Set to false once a device has been successfully paired.
+     */
+    private boolean pairInterruptFlag = true;
+
+    /**
+     * Lifesense constant values
+     */
+    private TypeConversion typeConversion = new TypeConversion();
+
+    /**
+     * Gson helper class for converting objects to JSON
+     */
+    private Gson gson = new Gson();
+
 	private String tag = "plugin";
-	private SharedPreferences sharedPref;
-	private Handler mHandler;
-	private String errorMessage = "Operation failed!Probably other tasks are running.";
-	String ACTION_START_SCANNING = "startScanning";
+
+    /**
+     * Used to store paired device information.
+     */
+    private SharedPreferences sharedPref;
+
+    /**
+     * Used for execution timeout
+     */
+    private Handler mHandler = new Handler();
+
+    /**
+     * Error message for other tasks running
+     */
+	private String RUNNING_TASKS_ERROR = "Operation failed! Probably other tasks are running.";
+
+    /**
+     * Cordova plugin action names
+     */
+    String ACTION_START_SCANNING = "startScanning";
 	String ACTION_STOP_SCANNING = "stopScanning";
 	String GET_CURRENT_DEVICES = "getCurrentDevices";
 	String PAIR_DEVICE = "pairDevice";
@@ -45,17 +91,19 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 	String ASK_FOR_DATA_BY_DEVICE_MAC_ADDRESS = "askForDataByDeviceMacAddress";
 	String GET_DATA = "getData";
 	String CLEAR_DEVICE_LIST = "clearDeviceList";
+
 	@Override
 	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-		Log.d(tag,action);
-		if (action.equals(ACTION_START_SCANNING)) {
+		Log.d(tag, action);
+
+        if (action.equals(ACTION_START_SCANNING)) {
 			startScanning(args.getString(0),callbackContext);
 			return true;
 		}else if(action.equals(ACTION_STOP_SCANNING)){
 			stopScanning(callbackContext);
 			return true;
 		}else if(action.equals(GET_CURRENT_DEVICES)){
-			listKnownDevices(callbackContext);
+			getScannedDevices(callbackContext);
 			return true;
 		}else if(action.equals(PAIR_DEVICE)){
 			pairDevice(args.getString(0),callbackContext);
@@ -78,17 +126,26 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 		}
 		return false;
 	}
+
+    /**
+     * Clears the scanned device list
+     * @param callbackContext
+     */
 	private void clearDeviceList(CallbackContext callbackContext){
-		tempList.clear();
-		callbackContext.success("device list cleared.");
+		scannedDeviceList.clear();
+		callbackContext.success("Scanned device list cleared.");
 	}
+
+    /**
+     * Initiates the retrieval of pedometer data
+     * @param callbackContext
+     */
 	private void askForData(CallbackContext callbackContext){
 		final CallbackContext callbackContextCopy = callbackContext;
-		mDelegate=new DeviceManagerCallback(){
+		mDelegate = new DeviceManagerCallback(){
 			@Override
 			public void onReceivePedometerMeasurementData(final PedometerData pData) {		
-				data.add(pData);
-				lastUpdateTime = System.currentTimeMillis();
+				dataList.add(pData);
 				Log.d(tag,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!DATA RECEIVED");
 				try{
 					String json = gson.toJson(pData);
@@ -100,15 +157,23 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 			}
 		};
 		bleDeviceManager.setCallback(mDelegate);
-		bleDeviceManager.interruptCurrentTask();
+
+        bleDeviceManager.interruptCurrentTask();
 		Log.d(tag,"Interrupt Current Task!");
-		if(bleDeviceManager.getDeviceMeasurementData(pairedDevice)){
+
+        if(bleDeviceManager.getDeviceMeasurementData(pairedDevice)){
 			callbackContext.success("Data requesting started.");
 		}else{
-			callbackContext.error(errorMessage);
+			callbackContext.error(RUNNING_TASKS_ERROR);
 			Log.d(tag,"OTHER TASKS ARE RUNNING!!");
 		}
 	}
+
+    /**
+     * Initiates the retrieval of pedometer data based on the provided device address
+     * @param jsonString
+     * @param callbackContext
+     */
 	private void askForDataByDeviceMacAddress(String jsonString, CallbackContext callbackContext){
 		String address;
 		int timeout;
@@ -133,8 +198,7 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 			mDelegate=new DeviceManagerCallback(){
 				@Override
 				public void onReceivePedometerMeasurementData(final PedometerData pData) {		
-					data.add(pData);
-					lastUpdateTime = System.currentTimeMillis();
+					dataList.add(pData);
 					Log.d(tag,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!DATA RECEIVED");
 				}
 			};
@@ -150,35 +214,43 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 				};
 				mHandler.postDelayed(myTask, timeout);
 			}else{
-				callbackContext.error(errorMessage);
+				callbackContext.error(RUNNING_TASKS_ERROR);
 				Log.d(tag,"OTHER TASKS ARE RUNNING!!");
 			}
 		}
 	}
+
+    /**
+     * Retrieves the items in the <code>dataList</code>, transforms to JSON format, and sends as a plugin result
+     * @param callbackContext
+     */
 	private void getData(CallbackContext callbackContext) {
 		JSONObject json = new JSONObject();
 		JSONArray jsonArray = new JSONArray();
 		try{
 			if(pairedDevice!=null){
-				for(int i=0;i<data.size();i++){
-					jsonArray.put(new JSONObject(gson.toJson(data.get(i))));
+				for(int i=0;i< dataList.size();i++){
+					jsonArray.put(new JSONObject(gson.toJson(dataList.get(i))));
 				}
 			}
 			json.put("data",jsonArray);
 		}catch(Exception e){
 			e.printStackTrace();
 		}
-		data.clear();
-		if(jsonArray.length()==0){
-			callbackContext.error("No data received.");
-		}else{
-			bleDeviceManager.interruptCurrentTask();
-			Log.d(tag,"Interrupt Current Task!");
-			PluginResult result = new PluginResult(PluginResult.Status.OK, json);
-			callbackContext.sendPluginResult(result);
-		}
+		dataList.clear();
+		bleDeviceManager.interruptCurrentTask();
+		Log.d(tag,"Interrupt Current Task!");
+		PluginResult result = new PluginResult(PluginResult.Status.OK, json);
+		callbackContext.sendPluginResult(result);
+		
 
 	}
+
+    /**
+     * Initiates the scanning of devices in range
+     * @param jsonString
+     * @param callbackContext
+     */
 	private void startScanning(String jsonString, CallbackContext callbackContext){
 		int timeout;
 		Log.d(tag,jsonString);
@@ -197,38 +269,49 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 			{
 				if(lsDevice!=null&&!deviceExists(lsDevice.getDeviceAddress()))
 				{
-					Log.d(tag,lsDevice.getDeviceName()+" "+tempList.size());
+					Log.d(tag, lsDevice.getDeviceName() + " " + scannedDeviceList.size());
 					BleDevice bleDevice=new BleDevice(
 						lsDevice.getDeviceName(),
 						lsDevice.getDeviceAddress(),
 						typeConversion.enumToInteger(lsDevice.getDeviceType()),
 						lsDevice.getModelNumber());
-					tempList.add(bleDevice);
+					scannedDeviceList.add(bleDevice);
 				}
 			}
 		};
 		bleDeviceManager.setCallback(mDelegate);
 		if(!bleDeviceManager.startScanning()){
-			callbackContext.error(errorMessage);
+			callbackContext.error(RUNNING_TASKS_ERROR);
 		}else{
 			Runnable myTask = new Runnable() {
 				@Override
 				public void run() {
 					bleDeviceManager.stopScanning();
-					listKnownDevices(callbackContextCopy);
+					getScannedDevices(callbackContextCopy);
 				}
 			};
 			mHandler.postDelayed(myTask, timeout);
 		}
 	}
+
+    /**
+     * Stops the scanning operation
+     * @param callbackContext
+     */
 	private void stopScanning(CallbackContext callbackContext){
 		bleDeviceManager.setCallback(mDelegate);
 		if(bleDeviceManager.stopScanning()){
 			callbackContext.success("Scanning stopped.");
 		}else{
-			callbackContext.error(errorMessage);
+			callbackContext.error(RUNNING_TASKS_ERROR);
 		}
 	}
+
+    /**
+     * Initates device pairing based on the provided device JSON object
+     * @param jsonString
+     * @param callbackContext
+     */
 	private void pairDevice(String jsonString, CallbackContext callbackContext){
 		try{
 			final CallbackContext callbackContextCopy = callbackContext;
@@ -237,12 +320,13 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 			int timeout = (Integer)json.get("timeout");
 			Log.d(tag,"param:"+jsonString);
 			Log.d(tag,"Pair device:"+device.toString());
-			mDevice=new LSDeviceInfo();
+            LSDeviceInfo mDevice = new LSDeviceInfo();
 			mDevice.setDeviceName(device.getName());
 			mDevice.setDeviceType(typeConversion.integerToEnum(device.getSensorType()));
 			mDevice.setDeviceAddress(device.getAddress());
 			mDevice.setModelNumber(device.getModelNumber());
 			bleDeviceManager.stopScanning();
+			pairInterruptFlag = true;
 			mDelegate=new DeviceManagerCallback(){
 				@Override
 				public void onPairedResults(final LSDeviceInfo device, final int state) {
@@ -253,18 +337,21 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 						editor.putString(device.getDeviceAddress(), gson.toJson(device));
 						editor.commit();
 						Log.d(tag,"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!Device paired:"+device.getDeviceName());
+						pairInterruptFlag = false;
 						getPairedDevice(callbackContextCopy);
 					}
 				}
 			};
 			bleDeviceManager.setCallback(mDelegate);
 			if(!bleDeviceManager.toPairDevice(mDevice)){
-				callbackContext.error(errorMessage);
+				callbackContext.error(RUNNING_TASKS_ERROR);
 			}else{
 				Runnable myTask = new Runnable() {
 					@Override
 					public void run() {
-						bleDeviceManager.interruptCurrentTask();
+						if(pairInterruptFlag){
+							Log.d(tag,"InterruptResult:"+bleDeviceManager.interruptCurrentTask());
+						}
 						callbackContextCopy.error("Pair Time Out.");
 					}
 				};
@@ -275,32 +362,45 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 		}
 	}
 
-	private void listKnownDevices(CallbackContext callbackContext) {
+    /**
+     * Retrieves the items in the <code>scannedDeviceList</code>, transforms to JSON format, and sends as a plugin result
+     * @param callbackContext
+     */
+	private void getScannedDevices(CallbackContext callbackContext) {
 		JSONObject response = new JSONObject();
 		JSONArray json = new JSONArray();
 		try{
-			for(int i=0;i<tempList.size();i++){
-					//json.put(tempList.get(i).getJson());
+			for(int i=0;i< scannedDeviceList.size();i++){
+				//json.put(scannedDeviceList.get(i).getJson());
 				// JSONObject obj = new JSONObject();
-				// obj.put("address", tempList.get(i).getAddress());
-				// obj.put("name", tempList.get(i).getName());
-				// obj.put("modelNumber", tempList.get(i).getModelNumber());
-				JSONObject obj = new JSONObject(gson.toJson(tempList.get(i)));
+				// obj.put("address", scannedDeviceList.get(i).getAddress());
+				// obj.put("name", scannedDeviceList.get(i).getName());
+				// obj.put("modelNumber", scannedDeviceList.get(i).getModelNumber());
+				JSONObject obj = new JSONObject(gson.toJson(scannedDeviceList.get(i)));
 				Log.d(tag, "obj");
-				// json.put(gson.toJson(tempList.get(i)));
+				// json.put(gson.toJson(scannedDeviceList.get(i)));
 				json.put(obj);
 			}
 			response.put("devices", json);
-		}catch(Exception e){
+		}
+		catch(Exception e){
 			e.printStackTrace();
 		}
+		
 		if(json.length()==0){
 			callbackContext.error("No device found.");
-		}else{
+		}
+		else{
+			scannedDeviceList.clear();
 			PluginResult result = new PluginResult(PluginResult.Status.OK, response);
 			callbackContext.sendPluginResult(result);
 		}
 	}
+
+    /**
+     * Retrieves the paired device information in <code>pairedDevice</code>, transforms to JSON format, and sends as a plugin result
+     * @param callbackContext
+     */
 	private void getPairedDevice(CallbackContext callbackContext) {
 
 		JSONObject json = new JSONObject();
@@ -321,14 +421,12 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 
 	@Override
 	public void initialize(CordovaInterface cordova, CordovaWebView webView){
-		data = new ArrayList<PedometerData>();
-		mHandler = new Handler();
-		super.initialize(cordova, webView);
-		typeConversion=new TypeConversion();
-		gson = new Gson();
-		mDelegate=new DeviceManagerCallback(){
+    	super.initialize(cordova, webView);
+
+		mDelegate = new DeviceManagerCallback(){
+            //TODO: Check if initialization will work without the overriden implementation
 			@Override
-			public void onDiscoverDevice(final LSDeviceInfo lsDevice) 
+			public void onDiscoverDevice(final LSDeviceInfo lsDevice)
 			{
 				if(lsDevice!=null&&!deviceExists(lsDevice.getDeviceAddress()))
 				{
@@ -338,20 +436,29 @@ public class LifesenseBLEPlugin extends CordovaPlugin {
 						lsDevice.getDeviceAddress(),
 						typeConversion.enumToInteger(lsDevice.getDeviceType()),
 						lsDevice.getModelNumber());
-					tempList.add(bleDevice);    
+					scannedDeviceList.add(bleDevice);
 				}
 			}
 		};
+
+        // Initialize shared preferences
 		sharedPref = this.cordova.getActivity().getSharedPreferences("com.leotech.plugin.LifesenseBLEPlugin", Context.MODE_PRIVATE);
-		bleDeviceManager=BleDeviceManager.getInstance(); 
+
+        // Instantiate BleDeviceManager
+		bleDeviceManager = BleDeviceManager.getInstance();
 		bleDeviceManager.initialize(this.cordova.getActivity().getApplicationContext(),mDelegate);
 	}
-	private boolean deviceExists(String address) 
-	{
+
+    /**
+     * Helper method to check whether <code>scannedDeviceList</code> contains the provided device address
+     * @param address
+     * @return boolean
+     */
+	private boolean deviceExists(String address) {
 		boolean found=false;
-		for (int i = 0; i < tempList.size(); i++) 
+		for (int i = 0; i < scannedDeviceList.size(); i++)
 		{
-			if (tempList.get(i).getAddress().equals(address)) 
+			if (scannedDeviceList.get(i).getAddress().equals(address))
 			{
 				return found=true;
 			}
