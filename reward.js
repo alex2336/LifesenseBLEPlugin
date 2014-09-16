@@ -1,6 +1,6 @@
 var Category = Parse.Object.extend("RewardCategory");
 var Reward = Parse.Object.extend("Reward");
-
+var Image = require( "parse-image" );
 
 exports.index = function onIndex(req, res) {
 	var currentUser = Parse.User.current();
@@ -8,31 +8,24 @@ exports.index = function onIndex(req, res) {
 	if (!currentUser) {
 		res.render('login', {errorMessage: "You are not logged-in."});
 	} else {
-		var query = new Parse.Query(Category);
+		var query = new Parse.Query(Reward);
+		query.include('category');
 		query.find({
-			success:function(categories){
-				var query = new Parse.Query(Reward);
-				query.find({
-					success:function(rewards){
-						rewards.forEach(function(reward){
-							for(var i=0;i<categories.length;i++){
-								if(categories[i].objectId == reward.get('category').objectId){
-									console.log("cat3:"+JSON.stringify(reward.get('category').objectId));
-									console.log("cat2:"+JSON.stringify(categories[i]));
-									reward.categoryId = categories[i].get('categoryId');
-									reward.objectId = reward.get('objectId');
-									break;
-								}
-							}
-						});
-						console.log(rewards)
-						console.log(JSON.stringify(rewards));
-						res.render('reward/list', {rewards:rewards});
-					}
+			success:function(rewards){
+				rewards.forEach(function(reward){
+					
+					reward.categoryId = reward.get('category').get('categoryId');
+					console.log("1111:"+JSON.stringify(reward.get('category')));
+					reward.objectId = reward.get('objectId');
+
+
 				});
+				console.log(rewards)
+				console.log(JSON.stringify(rewards));
+				res.render('reward/list', {rewards:rewards});
 			}
 		});
-		
+
 	}
 }
 exports.createForm = function onIndex(req, res) {
@@ -86,28 +79,83 @@ exports.create = function onIndex(req, res) {
 		var description = req.body.description;
 		var file = req.body.file;
 		console.log("file:"+JSON.stringify(file));
+		var image = new Image();
+		var imageFile;
 		//var image = new Parse.File(file.name, file, "image/png");
-		var query = new Parse.Query(Category);
-		var reward = new Reward();
-		reward.set('name',name);
-		reward.set('description',description);
-		//reward.set('image',image);
-		console.log("Category ID:"+req.body.category);
-		query.equalTo("categoryId",parseInt(req.body.category));
-		query.find({
-			success:function(categories){
-				console.log("Cat:"+JSON.stringify(categories));
-				reward.set('category',categories[0]);
-				reward.save(null,{
-					success:function(){
-						res.redirect("/admin/reward/index");
-					},
-					error:function(error){
-						console.log(error);
-					}
-				});
-			}
+		Parse.Cloud.httpRequest({ url: file}).then(function(response) {	
+			image.setData(response.buffer);
+			imageFile = new Parse.File("image.png", { base64: image.data().toString("base64")});
+			console.log(JSON.stringify(imageFile));
+		}).then(function(){
+			
+			var query = new Parse.Query(Category);
+			var reward = new Reward();
+			reward.set('name',name);
+			reward.set('description',description);
+			reward.set('image',imageFile);
+			//reward.set('image',image);
+			console.log("Category ID:"+req.body.category);
+			query.equalTo("categoryId",parseInt(req.body.category));
+			query.find({
+				success:function(categories){
+					console.log("Cat:"+JSON.stringify(categories));
+					reward.set('category',categories[0]);
+					reward.save(null,{
+						success:function(){
+							res.redirect("/admin/reward/index");
+						},
+						error:function(error){
+							console.log(error);
+						}
+					});
+				}
+			});
 		});
+		
+	}
+}
+exports.update = function onIndex(req, res) {
+	var currentUser = Parse.User.current();
+	if (!currentUser) {
+		res.render('login', {errorMessage: "You are not logged-in."});
+	} else {
+		var name =req.body.name;
+		var description = req.body.description;
+		var file = req.body.file;
+		console.log("file:"+JSON.stringify(file));
+		var image = new Image();
+		var imageFile;
+		//var image = new Parse.File(file.name, file, "image/png");
+		Parse.Cloud.httpRequest({ url: file}).then(function(response) {	
+			image.setData(response.buffer);
+			imageFile = new Parse.File("image.png", { base64: image.data().toString("base64")});
+			console.log(JSON.stringify(imageFile));
+		}).then(function(){
+			
+			var query = new Parse.Query(Category);
+			var reward = new Reward();
+			reward.set('name',name);
+			reward.set('description',description);
+			reward.set('image',imageFile);
+			//reward.set('image',image);
+			console.log("Category ID:"+req.body.category);
+			query.equalTo("categoryId",parseInt(req.body.category));
+			query.find({
+				success:function(categories){
+					console.log("Cat:"+JSON.stringify(categories));
+					reward.set('category',categories[0]);
+					reward.save(null,{
+						success:function(){
+							res.redirect("/admin/reward/index");
+						},
+						error:function(error){
+							console.log(error);
+						}
+					});
+				}
+			});
+		});
+		
 	}
 }
 exports.category = function onIndex(req, res) {
