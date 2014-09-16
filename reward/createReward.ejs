@@ -1,0 +1,90 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>GlobeTrekker Backoffice | Welcome</title>
+	<link rel="stylesheet" href="/admin/css/foundation.css" />
+	<script src="/admin/js/vendor/modernizr.js"></script>
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<script type="text/javascript">
+	
+	$(function() {
+		var file;
+		$('#fileselect').bind("change", function(e) {
+			var files = e.target.files || e.dataTransfer.files;
+			file = files[0];
+			var serverUrl = 'https://api.parse.com/1/files/' + file.name;
+
+			$.ajax({
+				type: "POST",
+				beforeSend: function(request) {
+					request.setRequestHeader("X-Parse-Application-Id", 'MY-APP-ID');
+					request.setRequestHeader("X-Parse-REST-API-Key", 'MY-REST-API-ID');
+					request.setRequestHeader("Content-Type", file.type);
+				},
+				url: serverUrl,
+				data: file,
+				processData: false,
+				contentType: false,
+				success: function(data) {
+					alert("File available at: " + data.url);
+				},
+				error: function(data) {
+					var obj = jQuery.parseJSON(data);
+					alert(obj.error);
+				}
+			});
+
+		});
+	});
+	</script>
+</head>
+<body>
+
+	<div class="row">
+		<div class="large-12 columns">
+			<h1>GlobeTrekker</h1>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="large-12 columns">
+			<div class="panel">
+				<form action="/admin/reward/create" method="post">
+					<div class="row">
+						<div class="large-12 columns">
+							<h3>Create reward</h3>
+						</div>
+						<div class="large-8 columns">
+							<label>Name:</label>
+							<input type="text" class="span2" name="name" required/>
+						</div>
+						<div class="large-8 columns">
+							<label>Category:</label>
+							<select class="span2" name="category">
+								<%categories.forEach(function(category){ %>
+								<option value='<%=category.attributes.categoryId%>'>Category <%=category.attributes.categoryId%>:$<%=category.attributes.price%></option>
+								<%});%>
+							</select>
+						</div>
+						<div class="large-8 columns" >
+							<label>Description:</label>
+							<textarea class="span2" style="min-height:200px" name="description"></textarea>
+						</div>
+						<div class="large-8 columns">
+							<label>Image:</label>
+							<input id="fileselect" type="file" class="span2" name="file" required/>
+						</div>
+						<div class="large-12 columns">
+							<div class="large-12 columns"><p><input class="small button" type="submit" value="Save" onclick="this.value='Saving ..';this.disabled='disabled'; this.form.submit();"/> <a href="/admin/reward/index" class="secondary small button">Cancel</a><br/>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+
+	</div>
+</body>
+</html>

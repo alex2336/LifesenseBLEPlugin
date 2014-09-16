@@ -1,0 +1,42 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>GlobeTrekker Backoffice | Welcome</title>
+	<link rel="stylesheet" href="/admin/css/foundation.css" />
+	<script src="/admin/js/vendor/modernizr.js"></script>
+</head>
+<body>
+
+	<div class="row">
+		<div class="large-12 columns">
+			<h1>GlobeTrekker</h1>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="large-12 columns">
+			<div class="panel">
+
+				<form action="/admin/reward/category/create" method="post">
+					<div class="row">
+						<div class="large-12 columns">
+							<h3>Create Category</h3>
+						</div>
+						<div class="large-12 columns">
+
+							<label>Price:</label>
+							<input type="text" class="span2" name="price"/>
+
+						</div>
+						<div class="large-12 columns">
+							<div class="large-12 columns"><p><input class="small button" type="submit" value="Save" onclick="this.value='Saving ..';this.disabled='disabled'; this.form.submit();"/> <a href="/admin/reward/categories" class="secondary small button">Cancel</a><br/>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</body>
+	</html>

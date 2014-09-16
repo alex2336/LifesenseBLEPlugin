@@ -1,0 +1,55 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>GlobeTrekker Backoffice | Welcome</title>
+	<link rel="stylesheet" href="/admin/css/foundation.css" />
+	<script src="/admin/js/vendor/modernizr.js"></script>
+</head>
+<body>
+
+	<div class="row">
+		<div class="large-12 columns">
+			<h1>GlobeTrekker</h1>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="large-12 columns">
+			<div class="panel">
+				<h3>Reward Listing</h3>
+				<span style="float: right">
+					<a class="button" href="/admin/reward/categories">Manage Category</a>
+					<a class="button" href="/admin/reward/create">Add a reward</a>
+				</span>
+				<form>
+					<div class="row">
+						<div class="large-12 columns">
+							<table class="large-12 columns">
+								<tr><th>Category</th><th>Name</th><th>Description</th><th>Image</th></tr>
+								<%rewards.forEach(function(reward){ %>
+								<tr><td><%=reward.categoryId%></td><td><%=reward.attributes.name%></td><td><%=reward.attributes.description%></td>
+									<td>
+									<%if(typeof reward.attributes.image!="undefined"){%>
+										<image style="height:100px;width:100px;" src="<%=reward.attributes.image.url()%>"/>
+										<%}%>
+									</td>
+									<td><a href="/admin/reward/update?id=<%=reward.id%>&categoryId=<%=reward.categoryId%>" class="small button">Edit</a></td></tr>
+									<%});%>
+								</table>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<script src="/admin/js/vendor/jquery.js"></script>
+		<script src="/admin/js/foundation.min.js"></script>
+		<script>
+		$(document).foundation();
+		</script>
+
+	</body>
+	</html>
