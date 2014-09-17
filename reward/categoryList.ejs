@@ -27,9 +27,12 @@
 						<div class="large-12 columns">
 							
 								<table class="large-12 columns">
-									<tr><th class="large-8 columns">Category Id</th><th>Price</th></tr>
+									<!-- <tr><th class="large-8 columns">Category Id</th><th>Price</th></tr> -->
 									<%categories.forEach(function(category){ %>
-									<tr><td class="large-8 columns" ><%=category.attributes.categoryId%></td><td><input type="text" class="span2" value='<%=category.attributes.price%>'/></td></tr>
+									<tr>
+										<td><input type="text" class="span2" name="<%=category.id%>" value='<%=category.attributes.name%>'/></td>
+										<td></td>
+									</tr>
 									<%});%>
 								</table>
 						</div>

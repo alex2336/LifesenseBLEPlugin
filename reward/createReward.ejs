@@ -42,7 +42,7 @@
 
 		});
 	});
-	</script>
+</script>
 </head>
 <body>
 
@@ -68,7 +68,7 @@
 							<label>Category:</label>
 							<select class="span2" name="category">
 								<%categories.forEach(function(category){ %>
-								<option value='<%=category.attributes.categoryId%>'>Category <%=category.attributes.categoryId%>:$<%=category.attributes.price%></option>
+								<option value='<%=category.id%>' name='category'>Category <%=category.attributes.name%></option>
 								<%});%>
 							</select>
 						</div>
@@ -81,6 +81,11 @@
 							<input id="fileselect" type="file" class="span2" required="true"/>
 							<input id="file" type="hidden" class="span2" name="file"/>
 							<input id="fileName" type="hidden" class="span2" name="fileName"/>
+						</div>
+						<div class="large-8 columns">
+							<label>Is Default:</label>
+							<input type='hidden' value='false' name='isDefault'>
+							<input type='checkbox' value='true' name='isDefault'>
 						</div>
 						<div class="large-12 columns">
 							<div class="large-12 columns"><p><input id="submitBtn" class="small button" type="submit" value="Save" onclick="this.value='Saving ..';this.disabled='disabled'; this.form.submit();"/> <a href="/admin/reward/index" class="secondary small button">Cancel</a><br/>

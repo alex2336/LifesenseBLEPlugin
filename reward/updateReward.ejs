@@ -9,18 +9,19 @@
 	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 	<script type="text/javascript">
 	
-	$(function() {
+	$(document).ready(function() {
 		var file;
 		$('#fileselect').bind("change", function(e) {
 			var files = e.target.files || e.dataTransfer.files;
 			file = files[0];
 			var serverUrl = 'https://api.parse.com/1/files/' + file.name;
-
+			$('#submitBtn').val("Uploading file...");
+			$('#submitBtn').attr("disabled", true);
 			$.ajax({
 				type: "POST",
 				beforeSend: function(request) {
-					request.setRequestHeader("X-Parse-Application-Id", 'MY-APP-ID');
-					request.setRequestHeader("X-Parse-REST-API-Key", 'MY-REST-API-ID');
+					request.setRequestHeader("X-Parse-Application-Id", 'OuYTKgk5S0dFQeZZyfNnUv7bl5r1MQFxylYEdgO1');
+					request.setRequestHeader("X-Parse-REST-API-Key", 'BDIQtlaGYtJ93iChBqC6WQw6EdzhujSMPOR2DSbl');
 					request.setRequestHeader("Content-Type", file.type);
 				},
 				url: serverUrl,
@@ -28,7 +29,10 @@
 				processData: false,
 				contentType: false,
 				success: function(data) {
-					alert("File available at: " + data.url);
+					$('#file').val(data.url);
+					$('#fileName').val(data.name);
+					$('#submitBtn').removeAttr("disabled");
+					$('#submitBtn').val("Save");
 				},
 				error: function(data) {
 					var obj = jQuery.parseJSON(data);
@@ -51,10 +55,11 @@
 	<div class="row">
 		<div class="large-12 columns">
 			<div class="panel">
-				<form action="/admin/reward/create" method="post">
+				<form action="/admin/reward/update" method="post">
 					<div class="row">
 						<div class="large-12 columns">
 							<h3>Update reward</h3>
+							<input type="hidden" name="rewardId" value="<%=reward.id%>"/>
 						</div>
 						<div class="large-8 columns">
 							<label>Name:</label>
@@ -62,9 +67,9 @@
 						</div>
 						<div class="large-8 columns">
 							<label>Category:</label>
-							<select class="span2" name="category" value="<%=reward.categoryId%>">
+							<select class="span2" name="category">
 								<%categories.forEach(function(category){ %>
-								<option value='<%=category.attributes.categoryId%>'>Category <%=category.attributes.categoryId%>:$<%=category.attributes.price%></option>
+								<option value='<%=category.id%>' <%if(category.id==currentCategory){%>selected="selected"<%}%>>Category <%=category.attributes.name%></option>
 								<%});%>
 							</select>
 						</div>
@@ -74,10 +79,20 @@
 						</div>
 						<div class="large-8 columns">
 							<label>Image:</label>
-							<input id="fileselect" type="file" class="span2" name="file" required/>
+							<%if(typeof reward.attributes.picture!="undefined"){%>
+							<image style="height:100px;width:100px;" src="<%=reward.attributes.picture.url()%>"/>
+								<%}%>
+							<input id="fileselect" type="file" class="span2" required="true"/>
+							<input id="file" type="hidden" class="span2" name="file"/>
+							<input id="fileName" type="hidden" class="span2" name="fileName"/>
+						</div>
+						<div class="large-8 columns">
+							<label>Is Default:</label>
+							<input type='hidden' value='false' name='isDefault'>
+							<input type='checkbox' value='true' name='isDefault'>
 						</div>
 						<div class="large-12 columns">
-							<div class="large-12 columns"><p><input class="small button" type="submit" value="Save" onclick="this.value='Saving ..';this.disabled='disabled'; this.form.submit();"/> <a href="/admin/reward/index" class="secondary small button">Cancel</a><br/>
+							<div class="large-12 columns"><p><input id="submitBtn" class="small button" type="submit" value="Save" onclick="this.value='Saving ..';this.disabled='disabled'; this.form.submit();"/> <a href="/admin/reward/index" class="secondary small button">Cancel</a><br/>
 							</div>
 						</div>
 					</div>
