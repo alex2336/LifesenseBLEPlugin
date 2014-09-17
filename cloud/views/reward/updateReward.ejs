@@ -1,0 +1,100 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>GlobeTrekker Backoffice | Welcome</title>
+	<link rel="stylesheet" href="/admin/css/foundation.css" />
+	<script src="/admin/js/vendor/modernizr.js"></script>
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<script type="text/javascript">
+	
+	$(document).ready(function() {
+		var file;
+		$('#fileselect').bind("change", function(e) {
+			var files = e.target.files || e.dataTransfer.files;
+			file = files[0];
+			var serverUrl = 'https://api.parse.com/1/files/' + file.name;
+			$('#submitBtn').val("Uploading file...");
+			$('#submitBtn').attr("disabled", true);
+			$.ajax({
+				type: "POST",
+				beforeSend: function(request) {
+					request.setRequestHeader("X-Parse-Application-Id", 'OuYTKgk5S0dFQeZZyfNnUv7bl5r1MQFxylYEdgO1');
+					request.setRequestHeader("X-Parse-REST-API-Key", 'BDIQtlaGYtJ93iChBqC6WQw6EdzhujSMPOR2DSbl');
+					request.setRequestHeader("Content-Type", file.type);
+				},
+				url: serverUrl,
+				data: file,
+				processData: false,
+				contentType: false,
+				success: function(data) {
+					$('#file').val(data.url);
+					$('#fileName').val(data.name);
+					$('#submitBtn').removeAttr("disabled");
+					$('#submitBtn').val("Save");
+				},
+				error: function(data) {
+					var obj = jQuery.parseJSON(data);
+					alert(obj.error);
+				}
+			});
+
+		});
+	});
+	</script>
+</head>
+<body>
+
+	<div class="row">
+		<div class="large-12 columns">
+			<h1>GlobeTrekker</h1>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="large-12 columns">
+			<div class="panel">
+				<form action="/admin/reward/update" method="post">
+					<div class="row">
+						<div class="large-12 columns">
+							<h3>Update reward</h3>
+							<input type="hidden" name="rewardId" value="<%=reward.id%>"/>
+						</div>
+						<div class="large-8 columns">
+							<label>Name:</label>
+							<input type="text" class="span2" name="name" required="true" value="<%=reward.attributes.name%>"/>
+						</div>
+						<div class="large-8 columns">
+							<label>Category:</label>
+							<select class="span2" name="category">
+								<%categories.forEach(function(category){ %>
+								<option value='<%=category.id%>' <%if(category.id==currentCategory){%>selected="selected"<%}%>>Category <%=category.attributes.name%></option>
+								<%});%>
+							</select>
+						</div>
+						<div class="large-8 columns" >
+							<label>Description:</label>
+							<textarea class="span2" style="min-height:200px" name="description"><%=reward.attributes.description%></textarea>
+						</div>
+						<div class="large-8 columns">
+							<label>Image:</label>
+							<%if(typeof reward.attributes.picture!="undefined"){%>
+							<image style="height:100px;width:100px;" src="<%=reward.attributes.picture.url()%>"/>
+								<%}%>
+							<input id="fileselect" type="file" class="span2" required="true"/>
+							<input id="file" type="hidden" class="span2" name="file"/>
+							<input id="fileName" type="hidden" class="span2" name="fileName"/>
+						</div>
+						<div class="large-12 columns">
+							<div class="large-12 columns"><p><input id="submitBtn" class="small button" type="submit" value="Save" onclick="this.value='Saving ..';this.disabled='disabled'; this.form.submit();"/> <a href="/admin/reward/index" class="secondary small button">Cancel</a><br/>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+
+	</div>
+</body>
+</html>

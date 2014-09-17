@@ -1,0 +1,86 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>GlobeTrekker Backoffice | Welcome</title>
+	<link rel="stylesheet" href="/admin/css/foundation.css" />
+	<script src="/admin/js/vendor/modernizr.js"></script>
+	<script src="/admin/js/vendor/jquery.js"></script>
+</head>
+<script type="text/javascript">
+$(document).ready(function() {
+	$('#category').on('change', function (e) {
+		var optionSelected = $("option:selected", this);
+		var valueSelected = this.value;
+		window.location.href="/admin/reward/index?category="+valueSelected;
+	});
+});
+</script>
+<body>
+
+	<div class="row">
+		<div class="large-12 columns">
+			<h1>GlobeTrekker</h1>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="large-12 columns">
+			<div class="panel">
+				<h3>Reward Listing</h3>
+				<span style="float: left" class="large-4 columns">
+					Category:<select id="category" class="large-12 columns">
+					<!-- <option value="all" <%if("all"==currentCategory){%>selected="selected"<%}%>>All</option> -->
+					<%categories.forEach(function(category){ %>
+					<option value='<%=category.id%>' <%if(category.id==currentCategory){%>selected="selected"<%}%>>Category <%=category.attributes.name%></option>
+					<%});%>
+				</select>
+			</span>
+			<span style="float: right">
+				<a class="button" href="/admin/reward/categories">Manage Category</a>
+				<a class="button" href="/admin/reward/create">Add a reward</a>
+			</span>
+			<form>
+				<div class="row">
+					<div class="large-12 columns">
+						<table class="large-12 columns">
+							<tr class="large-12 columns"><th class="large-2 columns">Name</th><th class="large-5 columns">Description</th><th class="large-2 columns">Image</th><th class="large-2 columns"></th><th class="large-1 columns"></th></tr>
+							<%rewards.forEach(function(reward){ %>
+							<tr class="large-12 columns">
+								<td class="large-2 columns"><%=reward.attributes.name%></td>
+								<td class="large-5 columns"><%=reward.attributes.description%></td>
+								<td class="large-2 columns">
+									<%if(typeof reward.attributes.picture!="undefined"){%>
+									<image style="height:80px;width:80px;" src="<%=reward.attributes.picture.url()%>"/>
+										<%}%>
+									</td>
+									
+									
+									<%if(reward.id==defaultId){%>
+									<td class="large-2 columns">
+										<span style="color:red;font-weight:bold;display:block;padding:20px;">Default</span>
+									</td>
+									<%}else{%>
+									<td class="large-2 columns"><a href="/admin/reward/setDefault?id=<%=reward.id%>&categoryId=<%=reward.categoryId%>" class="small button">Default</a></td>
+									<%}%>
+									<td class="large-1 columns"><a href="/admin/reward/update?id=<%=reward.id%>&categoryId=<%=reward.categoryId%>" class="small button">Edit</a></td>
+								</tr>
+								<%});%>
+							</table>
+							<a href="/admin/index" class="secondary small button">Back</a><br/>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<script src="/admin/js/vendor/jquery.js"></script>
+	<script src="/admin/js/foundation.min.js"></script>
+	<script>
+	$(document).foundation();
+	</script>
+
+</body>
+</html>

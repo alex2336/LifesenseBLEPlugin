@@ -1,0 +1,51 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>GlobeTrekker Backoffice | Welcome</title>
+	<link rel="stylesheet" href="/admin/css/foundation.css" />
+	<script src="/admin/js/vendor/modernizr.js"></script>
+</head>
+<body>
+
+	<div class="row">
+		<div class="large-12 columns">
+			<h1>GlobeTrekker</h1>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="large-12 columns">
+			<div class="panel">
+				<h3>Reward Categories</h3>
+				<span style="float: right">
+					<a class="button" href="/admin/reward/category/create">Add a category</a>
+				</span>
+				<form action="/admin/reward/category/update" method="post">
+					<div class="row">
+						<div class="large-12 columns">
+							
+								<table class="large-12 columns">
+									<!-- <tr><th class="large-8 columns">Category Id</th><th>Price</th></tr> -->
+									<%categories.forEach(function(category){ %>
+									<tr>
+										<td><input type="text" class="span2" name="<%=category.id%>" value='<%=category.attributes.name%>'/></td>
+									</tr>
+									<%});%>
+								</table>
+						</div>
+						<div class="large-12 columns"><p><input class="small button" type="submit" value="Save" onclick="this.value='Saving ..';this.disabled='disabled'; this.form.submit();"/> <a href="/admin/reward/index" class="secondary small button">Cancel</a><br/></div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<script src="/admin/js/vendor/jquery.js"></script>
+	<script src="/admin/js/foundation.min.js"></script>
+	<script>
+	$(document).foundation();
+	</script>
+</body>
+</html>
