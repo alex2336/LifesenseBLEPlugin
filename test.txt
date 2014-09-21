@@ -1,0 +1,9 @@
+var groupByChallenge = _.groupBy(rewards,function(reward){
+	return reward.challenge.name;
+});
+groupByChallenge = _.map(groupByChallenge,function(challenge){
+	return _.countBy(challenge,function(reward){
+		return reward.rewardType.name;
+	});
+});
+console.log(groupByChallenge);
